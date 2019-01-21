@@ -1,0 +1,1 @@
+SELECT * FROM testDB.comands;

@@ -1,0 +1,25 @@
+Jan 11, 2019 3:20:12 AM logServer <init>
+INFO: My first log
+Jan 11, 2019 3:20:12 AM logServer writeLog
+INFO: Server start	port: 8000
+Jan 11, 2019 3:20:14 AM logServer writeLog
+INFO: Client 1's IP Address is 127.0.0.1
+
+Jan 11, 2019 3:20:14 AM logServer writeLog
+INFO: SQL - succesfully
+Jan 11, 2019 3:20:14 AM logServer writeLog
+INFO: Server and SQL succesfully work.
+Jan 11, 2019 6:25:54 PM logServer writeLog
+INFO: Client 2's IP Address is 127.0.0.1
+
+Jan 11, 2019 6:25:54 PM logServer writeLog
+INFO: SQL - succesfully
+Jan 11, 2019 6:25:54 PM logServer writeLog
+INFO: Server and SQL succesfully work.
+Jan 14, 2019 9:56:29 AM logServer writeLog
+INFO: Client 3's IP Address is 127.0.0.1
+
+Jan 14, 2019 9:56:29 AM logServer writeLog
+INFO: SQL - succesfully
+Jan 14, 2019 9:56:29 AM logServer writeLog
+INFO: Server and SQL succesfully work.
