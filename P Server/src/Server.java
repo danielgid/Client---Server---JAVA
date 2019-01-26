@@ -11,7 +11,7 @@ import java.net.Socket;
  */
 
 class Server {
-	private static int portId = 8000;
+	private static final int portId = 8000;
 
 	private logServer _ls;
 	private ServerSocket _serverSocket;

@@ -1,0 +1,26 @@
+Jan 26, 2019 3:57:49 AM p_Client.logServer <init>
+INFO: My first log
+Jan 26, 2019 3:58:07 AM p_Client.logServer writeLog
+INFO: Connection success	port:8000	
+Jan 26, 2019 3:58:07 AM p_Client.logServer writeLog
+INFO: Connection error	port:8000	
+Jan 26, 2019 3:58:07 AM p_Client.logServer writeLog
+INFO: Succssefully write to server strings
+Jan 26, 2019 3:58:07 AM p_Client.logServer writeLog
+INFO: daniel
+Jan 26, 2019 3:58:07 AM p_Client.logServer writeLog
+INFO: Have successefuly sign in
+
+Jan 26, 2019 3:58:09 AM p_Client.logServer writeLog
+INFO: Disconnect sucssefuly	port:8000	
+Jan 26, 2019 3:58:13 AM p_Client.logServer writeLog
+INFO: Connection success	port:8000	
+Jan 26, 2019 3:58:13 AM p_Client.logServer writeLog
+INFO: Connection error	port:8000	
+Jan 26, 2019 3:58:13 AM p_Client.logServer writeLog
+INFO: Succssefully write to server strings
+Jan 26, 2019 3:58:13 AM p_Client.logServer writeLog
+INFO: daniel
+Jan 26, 2019 3:58:13 AM p_Client.logServer writeLog
+INFO: Have successefuly sign in
+
