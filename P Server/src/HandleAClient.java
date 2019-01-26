@@ -17,22 +17,22 @@ import java.net.Socket;
 
 class HandleAClient implements Runnable {
 
-	private static int keyI = 620453927;
-	private static double keyD = Math.PI;
+	private static final int keyI = 620453927;
+	private static final double keyD = Math.PI;
+	private static final String keyS = "m48fgHGD4@%vRT3G7dfgd/[EWndsf9j458t34jgb04h3gijg43$T$Y38f43gm30H$%#Y$%WERG$W#$TG$54jog835hgj4ptjb 4  gti0 gbj4g/rtg34g $WG4w5hiubrnfgby4brth4wBN54gb$#%Y$%H$^YH$G";
 
 	private static final int failed = 0;
 	private static final int succsses = 1;
 
-	private Socket socket; // A connected socket
+	private Socket _socket; // A connected socket
 
-	private DataInputStream inputFromClient;
-	private DataOutputStream outputToClient;
+	private DataInputStream _inputFromClient;
+	private DataOutputStream _outputToClient;
 
-	private SQLReader serverDB;
+	private SQLReader _serverDB;
 
-	private int _id;
-	private double _xFC;
-	private double _yFC;
+	private boolean _error = false;
+	private Status _status;
 	private logServer _ls;
 
 	/**
@@ -46,8 +46,8 @@ class HandleAClient implements Runnable {
 	public HandleAClient(Socket socket, logServer _ls2) {
 		_ls = _ls2;
 
-		this.socket = socket;
-		serverDB = new SQLReader(_ls);
+		this._socket = socket;
+		_serverDB = new SQLReader(_ls);
 	}
 
 	/**
@@ -55,47 +55,50 @@ class HandleAClient implements Runnable {
 	 * 
 	 * @return if succsefully get data
 	 */
-	public boolean setPriority() {
+	public void setPriority() {
 		int priority = 0;
 		try {
-			priority = secret.decodeI(inputFromClient.readInt(), keyI);
+			priority = secret.decodeI(_inputFromClient.readInt(), keyI);
 			Thread.currentThread().setPriority(priority);
-			return true;
 		} catch (IOException e) {
 			_ls.writeLog(e.getMessage().toString());
-			return false;
+			_error = true;
 		}
 	}
 
 	/**
-	 * get y cordiante
 	 * 
 	 * @return if succsefully get data
 	 */
-	public boolean setxFC() {
-		_xFC = 0;
+	public double getDouble() {
+		double data = 0;
 		try {
-			_xFC = secret.decodeD(inputFromClient.readDouble(), keyD);
-			return true;
+			data = secret.decodeD(_inputFromClient.readDouble(), keyD);
 		} catch (IOException e) {
 			_ls.writeLog(e.getMessage().toString());
-			return false;
+			_error = true;
+			return -1;
 		}
+
+		return data;
 	}
 
 	/**
-	 * get y cordiante
 	 * 
-	 * @return if succsefully get data
+	 * @return string we get from server
 	 */
-	public boolean setyFC() {
-		_yFC = 0;
+	public String getString() {
+		char ch;
+		String str = "";
 		try {
-			_yFC = secret.decodeD(inputFromClient.readDouble(), keyD);
-			return true;
+			while ((ch = _inputFromClient.readChar()) != '\n') {
+				str += ch;
+			}
+			return secret.decodeS(str, keyS);
 		} catch (IOException e) {
 			_ls.writeLog(e.getMessage().toString());
-			return false;
+			_error = true;
+			return "";
 		}
 	}
 
@@ -105,13 +108,12 @@ class HandleAClient implements Runnable {
 	 *            - data to write to client
 	 * @return if succsefully write data
 	 */
-	private boolean writeDouble(double num) {
+	private void writeDouble(double num) {
 		try {
-			outputToClient.writeDouble(num);
-			return true;
+			_outputToClient.writeDouble(secret.decodeD(num, keyD));
 		} catch (IOException e) {
 			_ls.writeLog(e.getMessage().toString());
-			return false;
+			_error = true;
 		}
 	}
 
@@ -121,13 +123,102 @@ class HandleAClient implements Runnable {
 	 *            data to write to client
 	 * @return if succsefully write data
 	 */
-	private boolean writeInt(int num) {
+	private void writeInt(int num) {
 		try {
-			outputToClient.writeInt(num);
-			return true;
+			_outputToClient.writeInt(secret.decodeI(num, keyI));
 		} catch (IOException e) {
 			_ls.writeLog(e.getMessage().toString());
-			return false;
+			_error = true;
+		}
+	}
+
+	/**
+	 * 
+	 */
+	private void setStatus() {
+		try {
+			_status = Status.convert(secret.decodeI(_inputFromClient.readInt(), keyI));
+		} catch (IOException e) {
+			_ls.writeLog(e.getMessage().toString());
+			_error = true;
+		}
+	}
+
+	/**
+	 * 
+	 */
+	private void cordinatesControl() {
+		int id;
+		// setPriority();
+
+		double xFC = getDouble(), yFC = getDouble();
+
+		if (_error) {
+			// TODO : error situation
+		} else {
+			if (_serverDB.minDistancePointIndex(secret.decodeD(xFC, keyD), secret.decodeD(yFC, keyD))) {
+
+				id = secret.decodeI(_serverDB.getId(), keyI);
+				xFC = secret.decodeD(_serverDB.getxCordinate(), keyD);
+				yFC = secret.decodeD(_serverDB.getyCordinate(), keyD);
+
+				writeInt(succsses);
+				writeInt(id);
+				writeDouble(xFC);
+				writeDouble(yFC);
+				_ls.writeLog("Server and SQL succesfully work.");
+			} else {
+				writeInt(secret.decodeI(failed, keyI));
+				_ls.writeLog("SQL server not work.");
+			}
+		}
+	}
+
+	/**
+	 * 
+	 */
+	private void userC() {
+		String user, pass;
+
+		user = getString();
+		pass = getString();
+
+		userControlSQL userSql = new userControlSQL(_ls);
+		int checked = userSql.checkUser(user, pass);
+
+		writeInt(checked);
+	}
+
+	/**
+	 * 
+	 */
+	private void userAdd() {
+		String user, pass;
+
+		user = getString();
+		pass = getString();
+
+		userControlSQL userSql = new userControlSQL(_ls);
+		int checked = userSql.addUser(user, pass, "", 0);
+
+		writeInt(checked);
+	}
+
+	/**
+	 * return to server succes signal
+	 */
+	private void checkConnectionTransfer() {
+		writeInt(succsses);
+	}
+
+	@SuppressWarnings("deprecation")
+	private void disconnect() {
+		try {
+			_socket.close();
+			_ls.writeLog("The socket closed.");
+			Thread.currentThread().stop();
+		} catch (IOException e) {
+			_ls.writeLog(e.getMessage().toString());
 		}
 	}
 
@@ -135,37 +226,46 @@ class HandleAClient implements Runnable {
 	 * Get data, decode data, check in SQL server
 	 * 
 	 * @if in sql - get data from sql and send decoded data to client
-	 * @e_lse send error to client
+	 * @else send error to client
 	 */
 	public void run() {
-		try {
-			// Create data input and output streams
-			inputFromClient = new DataInputStream(socket.getInputStream());
-			outputToClient = new DataOutputStream(socket.getOutputStream());
+		while (true) {
+			try {
+				// Create data input and output streams
+				_inputFromClient = new DataInputStream(_socket.getInputStream());
+				_outputToClient = new DataOutputStream(_socket.getOutputStream());
 
-			setPriority();
-			setxFC();
-			setyFC();
+				setStatus();
 
-			if (serverDB.minDistancePointIndex(secret.decodeD(_xFC, keyD), secret.decodeD(_yFC, keyD))) {
+				if (!_error) {
+					switch (_status) {
+					case disconnect:
+						disconnect();
+						break;
 
-				_id = secret.decodeI(serverDB.getId(), keyI);
-				_xFC = secret.decodeD(serverDB.getxCordinate(), keyD);
-				_yFC = secret.decodeD(serverDB.getyCordinate(), keyD);
+					case addUser:
+						userAdd();
+						break;
 
-				writeInt(secret.decodeI(succsses, keyI));
-				writeInt(secret.decodeI(_id, keyI));
-				writeDouble(secret.decodeD(_xFC, keyD));
-				writeDouble(secret.decodeD(_yFC, keyD));
-				_ls.writeLog("Server and SQL succesfully work.");
-			} else {
-				writeInt(secret.decodeI(failed, keyI));
-				_ls.writeLog("SQL server not work.");
+					case cordinates:
+						cordinatesControl();
+						break;
+
+					case checkUser:
+						userC();
+						break;
+
+					case checkConnection:
+						checkConnectionTransfer();
+						break;
+
+					default:
+						break;
+					}
+				}
+			} catch (IOException e) {
+				_ls.writeLog(e.getMessage().toString());
 			}
-
-			socket.close();
-		} catch (IOException e) {
-			_ls.writeLog(e.getMessage().toString());
 		}
 	}
 

@@ -1,10 +1,8 @@
 package p_Client;
 
-import javax.swing.*;
-
 import java.awt.*;
+import javax.swing.*;
 import java.awt.event.*;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -32,12 +30,14 @@ public class ClientGUI implements ActionListener {
 	private JMenuBar _menuBar;
 	private Choice _priorityCh;
 	private JTextArea _missionTa;
-	private JScrollPane jScrollPane1;
+	private JScrollPane _jScrollPane1;
 
 	private logServer _ls;
 	private LoginF _loginFrame;
 	private KeyListener _enterKey;
 	private Client _clientControl;
+
+	private preferencesDialog _prefD;
 
 	public static void main(String[] args) {
 		new ClientGUI();
@@ -51,24 +51,37 @@ public class ClientGUI implements ActionListener {
 
 		_clientFrame = new JFrame();
 		_loginFrame = new LoginF(_ls);
-		_clientControl = new Client(_ls);
 
 		_clientFrame.setSize(500, 820);
 		_clientFrame.setLayout(null);
 		_clientFrame.add(_loginFrame);
 		init();
 
+		// startFrame();
+		
+
+		_clientControl = new Client(_ls);
+		_loginFrame.setClientPointer(_clientControl);
+
 		/**
 		 * event for login frame to close and open new frame
 		 */
 		_loginFrame.setLoginListener(new loginFrameListener() {
 			@Override
-			public void singUpListener() {
-				_loginFrame.setVisible(false);
-				_clientFrame.setVisible(true);
+			public void singUpListener(Client clientControl) {
+				_clientControl = clientControl;
+				startFrame();				
 			}
 		});
+		
+	}
 
+	/**
+	 * 
+	 */
+	private void startFrame() {
+		_loginFrame.setVisible(false);
+		_clientFrame.setVisible(true);
 	}
 
 	/**********************************************************/
@@ -77,44 +90,32 @@ public class ClientGUI implements ActionListener {
 	 * Init gui screen
 	 */
 	private void init() {
-		JLabel nameL, priorityL, xL, yL;
+		initLabels();
 		_enterKey = new enterLoginKeyBoard();
 
-		nameL = new JLabel("Name :");
-		nameL.setBounds(20, 50, 150, 20);
-
-		priorityL = new JLabel("Priority :");
-		priorityL.setBounds(20, 100, 150, 20);
-
-		xL = new JLabel("X cordinate :");
-		xL.setBounds(20, 150, 150, 20);
-
-		yL = new JLabel("Y cordinate :");
-		yL.setBounds(20, 200, 150, 20);
-
 		_nameTf = new JTextField();
-		_nameTf.setBounds(100, 50, 150, 20);
+		_nameTf.setBounds(140, 50, 150, 20);
 
 		_priorityCh = new Choice();
-		_priorityCh.setBounds(100, 100, 150, 20);
+		_priorityCh.setBounds(140, 100, 150, 20);
 		for (priorityEnum p : priorityEnum.values()) {
 			_priorityCh.add(p.toString());
 		}
 		_priorityCh.select(3);
 
 		_xTf = new JTextField();
-		_xTf.setBounds(100, 150, 150, 20);
+		_xTf.setBounds(140, 150, 150, 20);
 
 		_yTf = new JTextField();
-		_yTf.setBounds(100, 200, 150, 20);
+		_yTf.setBounds(140, 200, 150, 20);
 
 		_xTf.addKeyListener(_enterKey);
 		_yTf.addKeyListener(_enterKey);
 		_nameTf.addKeyListener(_enterKey);
 
 		_missionTa = new JTextArea();
-		jScrollPane1 = new JScrollPane(_missionTa);
-		jScrollPane1.setBounds(15, 320, 470, 470);
+		_jScrollPane1 = new JScrollPane(_missionTa);
+		_jScrollPane1.setBounds(15, 320, 470, 470);
 
 		_sendBtn = new JButton("Send");
 		_sendBtn.setBounds(300, 250, 50, 50);
@@ -123,13 +124,33 @@ public class ClientGUI implements ActionListener {
 		_menuBar = new JMenuBar();
 		setMenu();
 
+		_prefD = new preferencesDialog();
+
 		_clientFrame.add(_xTf);
 		_clientFrame.add(_yTf);
 		_clientFrame.add(_nameTf);
 		_clientFrame.add(_sendBtn);
 		_clientFrame.add(_priorityCh);
-		_clientFrame.add(jScrollPane1);
+		_clientFrame.add(_jScrollPane1);
 		_clientFrame.setJMenuBar(_menuBar);
+
+
+	}
+	
+	private void initLabels() {
+		JLabel nameL, priorityL, xL, yL;
+
+		nameL = new JLabel("Name :");
+		nameL.setBounds(20, 50, 150, 20);
+
+		priorityL = new JLabel("Priority :");
+		priorityL.setBounds(20, 100, 80, 20);
+
+		xL = new JLabel("X cordinate :");
+		xL.setBounds(20, 150, 150, 20);
+
+		yL = new JLabel("Y cordinate :");
+		yL.setBounds(20, 200, 150, 20);
 		
 		_clientFrame.add(nameL);
 		_clientFrame.add(priorityL);
@@ -141,7 +162,17 @@ public class ClientGUI implements ActionListener {
 	 * Menu inition
 	 */
 	private void setMenu() {
+		_menuBar.add(fileMenuInit());
+		_menuBar.add(optionMenuInit());
+	}
+
+	/**
+	 * 
+	 * @return JMenu of file
+	 */
+	private JMenu fileMenuInit() {
 		JMenu fileMenu = new JMenu("File");
+		JMenuItem exitMI = new JMenuItem("Exit");
 		JMenuItem logOutMI = new JMenuItem("Log Out");
 
 		logOutMI.addActionListener(new ActionListener() {
@@ -150,14 +181,42 @@ public class ClientGUI implements ActionListener {
 			 */
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				_clientControl.writeToServer(Status.disconnect);
+				_clientControl.disconnect();
+				_loginFrame.setClientPointer(_clientControl);
 				_loginFrame.setVisible(true);
 				_clientFrame.setVisible(false);
 			}
 		});
 
-		_menuBar.add(fileMenu);
 		fileMenu.add(logOutMI);
+		fileMenu.add(exitMI);
 
+		return fileMenu;
+	}
+
+	/**
+	 * 
+	 * @return JMenu of options
+	 */
+	private JMenu optionMenuInit() {
+		JMenu optionMenu = new JMenu("Options");
+
+		JMenuItem prefreMI = new JMenuItem("Prefernces");
+
+		prefreMI.addActionListener(new ActionListener() {
+			/**
+			 * Preferences window open
+			 */
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				_prefD.setVisible(true);
+			}
+		});
+
+		optionMenu.add(prefreMI);
+
+		return optionMenu;
 	}
 
 	/**********************************************************/
@@ -297,7 +356,7 @@ public class ClientGUI implements ActionListener {
 			_missionTa.append("Server not found\n\n");
 			_ls.writeLog("Server not found\n\n");
 		} else {// Write data to server
-			_clientControl.writeToServer(priority, xCorD, yCorD);
+			_clientControl.writeToServer(Status.cordinates, priority, xCorD, yCorD);
 			// Display to the text area
 			if (_clientControl.readIntFromServer() == 1) {
 				_missionTa.append("Id Code: " + _clientControl.readIntFromServer() + "\n");
@@ -310,7 +369,7 @@ public class ClientGUI implements ActionListener {
 				_missionTa.append("SQL Server or Server not found\n\n");
 				_ls.writeLog("SQL Server or Server not found\n\n");
 			}
-			_clientControl.disconnect();
+			//_clientControl.disconnect();
 		}
 	}
 

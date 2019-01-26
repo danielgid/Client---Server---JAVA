@@ -23,7 +23,7 @@ public class userControl {
 	private static final String PASSWORD = "12345678";
 	private static final String FILENAME = "users.dba";
 
-	private static String keyS = "m48fgHGD4@%vRT3G7dfgd/[EWndsf9j458t34jgb04h3gijg43$T$Y38f43gm30H$%#Y$%WERG$W#$TG$54jog835hgj4ptjb 4  gti0 gbj4g/rtg34g $WG4w5hiubrnfgby4brth4wBN54gb$#%Y$%H$^YH$G";
+	private static final String keyS = "m48fgHGD4@%vRT3G7dfgd/[EWndsf9j458t34jgb04h3gijg43$T$Y38f43gm30H$%#Y$%WERG$W#$TG$54jog835hgj4ptjb 4  gti0 gbj4g/rtg34g $WG4w5hiubrnfgby4brth4wBN54gb$#%Y$%H$^YH$G";
 
 	/***************************************************************************/
 
@@ -38,7 +38,7 @@ public class userControl {
 	 *            - pointer to log writer
 	 * @return if user in database
 	 */
-	public static boolean userCheck(String user, String pass, logServer ls) {
+	public static boolean checkUser(String user, String pass, logServer ls) {
 		user = secret.decodeS(user, keyS);
 		pass = secret.decodeS(pass, keyS);
 

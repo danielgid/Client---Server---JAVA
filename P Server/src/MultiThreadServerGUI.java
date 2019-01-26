@@ -69,5 +69,5 @@ public class MultiThreadServerGUI extends JFrame {
 			task.start();
 			clientNo++;
 		}
-	}
+	} 
 }

@@ -7,5 +7,6 @@ package p_Client;
  * 
  */
 public interface loginFrameListener {
-	void singUpListener();
+	void singUpListener(Client clientControl);
+
 }
